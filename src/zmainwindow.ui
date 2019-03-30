@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ZMainWindow</class>
+ <widget class="QMainWindow" name="ZMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>План-факт</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../plan_fakt.qrc">
+    <normaloff>:/images/table.png</normaloff>:/images/table.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="margin">
+     <number>1</number>
+    </property>
+    <property name="spacing">
+     <number>1</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="QMdiArea" name="mdiArea">
+      <property name="frameShape">
+       <enum>QFrame::WinPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <property name="midLineWidth">
+       <number>0</number>
+      </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAsNeeded</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAsNeeded</enum>
+      </property>
+      <property name="activationOrder">
+       <enum>QMdiArea::CreationOrder</enum>
+      </property>
+      <property name="viewMode">
+       <enum>QMdiArea::TabbedView</enum>
+      </property>
+      <property name="documentMode">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Файл</string>
+    </property>
+    <addaction name="actOpenFile"/>
+    <addaction name="actProtokol"/>
+    <addaction name="actClose"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>Справочники</string>
+    </property>
+    <addaction name="actOperations"/>
+    <addaction name="actAccounts"/>
+    <addaction name="actPersons"/>
+    <addaction name="actSections"/>
+    <addaction name="actPartners"/>
+    <addaction name="actProjects"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>Помощь</string>
+    </property>
+    <addaction name="actAbout"/>
+    <addaction name="actAboutQt"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>Инструменты</string>
+   </property>
+   <property name="movable">
+    <bool>true</bool>
+   </property>
+   <property name="floatable">
+    <bool>true</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actOperations"/>
+   <addaction name="actProjects"/>
+   <addaction name="actAccounts"/>
+   <addaction name="actPersons"/>
+   <addaction name="actSections"/>
+   <addaction name="actPartners"/>
+   <addaction name="actProtokol"/>
+  </widget>
+  <action name="actOpenFile">
+   <property name="text">
+    <string>Импорт</string>
+   </property>
+   <property name="toolTip">
+    <string>Импорт из файла</string>
+   </property>
+  </action>
+  <action name="actClose">
+   <property name="text">
+    <string>Выход</string>
+   </property>
+   <property name="toolTip">
+    <string>Выход из программы</string>
+   </property>
+  </action>
+  <action name="actAbout">
+   <property name="text">
+    <string>О программе</string>
+   </property>
+  </action>
+  <action name="actAboutQt">
+   <property name="text">
+    <string>QT</string>
+   </property>
+  </action>
+  <action name="actAccounts">
+   <property name="text">
+    <string>Мои счета</string>
+   </property>
+  </action>
+  <action name="actPersons">
+   <property name="text">
+    <string>Юр. лица</string>
+   </property>
+  </action>
+  <action name="actSections">
+   <property name="text">
+    <string>Учетные статьи</string>
+   </property>
+  </action>
+  <action name="actPartners">
+   <property name="text">
+    <string>Контрагенты</string>
+   </property>
+  </action>
+  <action name="actProjects">
+   <property name="text">
+    <string>Проекты</string>
+   </property>
+  </action>
+  <action name="actProtokol">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Отчет</string>
+   </property>
+  </action>
+  <action name="actOperations">
+   <property name="text">
+    <string>Операции</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../plan_fakt.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actClose</sender>
+   <signal>triggered()</signal>
+   <receiver>ZMainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
