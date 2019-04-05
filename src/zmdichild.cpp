@@ -19,3 +19,23 @@ void ZMdiChild::closeEvent(QCloseEvent *event)
 	event->accept();
 }
 
+void ZMdiChild::setContextMenuForTbl(const QStringList &items)
+{
+	QList<QAction *> contextMnuActions;
+
+	foreach(QString item, items)
+	{
+		QAction *pAct = new QAction(item, m_tbl->getTable());
+		contextMnuActions.append(pAct);
+		connect(pAct, SIGNAL(triggered()), this, SLOT(slotCustomActionExec()));
+	}
+	m_tbl->getTable()->setContextMenuPolicy(Qt::ActionsContextMenu);
+	m_tbl->getTable()->addActions(contextMnuActions);
+}
+
+void ZMdiChild::slotCustomActionExec()
+{
+	QAction *pAct = dynamic_cast<QAction*>(sender());
+	if(pAct)
+		execCustomAction(pAct->text());
+}

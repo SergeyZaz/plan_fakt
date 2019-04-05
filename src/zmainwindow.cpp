@@ -8,6 +8,8 @@
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QMdiSubWindow>
+#include <QFileInfo>
+#include <QCryptographicHash>
 #include "zmainwindow.h"
 #include "zurpersons.h"
 #include "zsections.h"
@@ -63,11 +65,54 @@ void ZMainWindow::slotAbout()
 		tr("Программа для ведения учета денежных средств.<p>Версия 1.0.1. Автор: <a href=\"mailto:zaz@29.ru\">Zaz</a>"));
 }
 
+QString key, key_id;
+#define GET_KEY(key) QCryptographicHash::hash("Zaz" + key.toLocal8Bit(), QCryptographicHash::Md5).toHex()
+#define TRIAL_NUM_DAYS	30
+void ZMainWindow::f()
+{
+	if(key_id == GET_KEY(key))
+		return;
+
+	QSqlQuery query;
+	QDate lastDate = QDate::currentDate();
+	if (query.exec(QString("SELECT date FROM operations ORDER BY date DESC LIMIT 1")))
+	{
+		while (query.next()) 
+		{
+			lastDate = query.value(0).toDate();
+			break;
+		}
+	}	
+
+	QFileInfo file(QApplication::arguments().at(0));
+	QDate lastModified = file.lastModified().date();
+
+	if(lastModified.daysTo(lastDate) > TRIAL_NUM_DAYS)
+	{
+		QMessageBox::critical(this, tr("Внимание"), tr("Закончился срок тестовой эксплуатации! \nЗарегистрируйте Вашу копию!"));
+		exit(0);
+	}
+
+	if(lastModified.daysTo(QDate::currentDate()) > TRIAL_NUM_DAYS)
+	{
+		QMessageBox::critical(this, tr("Внимание"), tr("Закончился срок тестовой эксплуатации!"));
+		exit(0);
+	}
+}
+
 void ZMainWindow::readSettings()
 {
 	QSettings settings("Zaz", "PlanFact");
 	QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
 	QSize size = settings.value("size", QSize(640, 480)).toSize();
+
+	key = QString::number(fZ());
+	if(settings.value("key", "").toString() != key)
+	{
+		settings.setValue("key", key);
+	}
+	key_id = settings.value("id", "").toString();
+
 	move(pos);
 	resize(size);
 }
@@ -105,6 +150,8 @@ int ZMainWindow::readIniFile()
         QMessageBox::critical(this, tr("Ошибка"), msg);
         return 0;
     }
+
+	f();
     return 1;
 }
 	

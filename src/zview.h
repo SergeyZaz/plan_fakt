@@ -73,7 +73,7 @@ public:
 	void setVisiblePrint(bool fTrue);
 	QItemSelectionModel *selectionModel();
 	QSqlQueryModel *getModel() { return model;}
-	//ZSortFilterProxyModel *getSortModel() { return &sortModel;}
+	ZSortFilterProxyModel *getSortModel() { return &sortModel;}
 	QTableView *getTable() { return ui.tbl;}
 	//bool loadView(int sortCol);
 

@@ -1,10 +1,106 @@
+#include <QInputDialog>
+#include <QMessageBox>
 #include "zoperations.h"
 #include "zoperationsform.h"
 
 ZOperations::ZOperations()
 {
+	QStringList items;
+	items << tr("Установить проект") << tr("Установить статью");
+	setContextMenuForTbl(items);
 }
 
+void ZOperations::loadItemsToList(QStringList &list, const QString &tableName)
+{
+	QSqlQuery query;
+	if (query.exec(QString("SELECT name FROM %1 ORDER BY name").arg(tableName)))
+	{
+		while (query.next()) 
+		{
+			list << query.value(0).toString().simplified();
+		}
+	}
+}
+
+void ZOperations::execCustomAction(const QString &txt)
+{
+	QString strTbl = "sections";
+	QString strAtt = "section";
+	QString text;
+	bool ok;
+	QStringList items;
+
+	if(txt == "Установить проект")
+	{
+		strTbl = "projects";
+		strAtt = "project";
+	
+		loadItemsToList(items, strTbl);
+
+		text = QInputDialog::getItem(this, tr("Установка проекта"),
+			tr("Проекты:"), items, 0, false, &ok);
+	}
+	else
+	{
+		loadItemsToList(items, strTbl);
+
+		text = QInputDialog::getItem(this, tr("Установка статьи"),
+			tr("Статьи:"), items, 0, false, &ok);
+	}
+
+	if (!ok || text.isEmpty())
+		return;
+	if(updateSelectedItems(text, strTbl, strAtt))
+		reload();
+}
+
+int ZOperations::updateSelectedItems(const QString &elemName, const QString &tableName, const QString &attName)
+{
+	QSqlQuery query;
+	int setId = 0;
+	if (query.exec(QString("SELECT id FROM %1 WHERE name='%2'").arg(tableName).arg(elemName)))
+	{
+		while (query.next()) 
+		{
+			setId = query.value(0).toInt();
+			break;
+		}
+	}
+	else
+		return 0;
+
+	QTableView *tbl = m_tbl->getTable();
+	QModelIndexList listIndxs = tbl->selectionModel()->selectedRows();
+	QList<int> ids;
+	int tId;
+	foreach(QModelIndex index, listIndxs)
+	{
+		QModelIndex indx = m_tbl->getSortModel()->mapToSource(index);
+		tId = m_tbl->getModel()->data(m_tbl->getModel()->index(indx.row(), 0)).toInt(); // id должен быть 0-м столюцом!!!
+		if(tId!=0 && !ids.contains(tId))
+			ids.push_back(tId);
+	}
+	
+	if(!ids.size())
+		return 0;
+
+	QString strQuery = QString("UPDATE operations SET %1=%2 WHERE id IN(").
+		arg(attName).
+		arg(setId);
+	foreach(int id, ids)
+	{
+		strQuery += QString::number(id) + ",";
+	}
+	strQuery.chop(1);
+	strQuery += ")";
+	
+	if (!query.exec(strQuery))
+	{
+		QMessageBox::critical(this, tr("Ошибка"), query.lastError().text());
+		return 0;
+	}
+	return 1;
+}
 
 void ZOperations::initDB(QSqlDatabase &m_DB, const QString &m_TblName)
 {

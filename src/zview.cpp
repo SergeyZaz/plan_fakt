@@ -648,6 +648,7 @@ QVariant ZTableModel::data(const QModelIndex & index, int role) const
 {
 	QVariant v;
 	int col = index.column();
+	int row = index.row();
 
 	if(col == m_PhotoColumn)
 	{
@@ -680,7 +681,7 @@ QVariant ZTableModel::data(const QModelIndex & index, int role) const
 
 	if(pHighlightItems && m_HighlightColumn!=-1 && role==Qt::BackgroundColorRole)
 	{
-		QModelIndex t_indx = this->index(index.row(), 0);
+		QModelIndex t_indx = this->index(row, 0);
 		v = QSqlTableModel::data(t_indx, Qt::DisplayRole);
 		if(pHighlightItems->contains(v.toInt()))
 			return HIGHLIGHTCOLOR;
@@ -691,7 +692,8 @@ QVariant ZTableModel::data(const QModelIndex & index, int role) const
 		v = QSqlTableModel::data(index, Qt::DisplayRole);
 		if(v.type() == QVariant::Double)
 		{
-			if(v.toDouble() < 0)
+			if(QSqlTableModel::data(this->index(row, 2), Qt::DisplayRole).toInt() == 1)//Тип: 0-Поступление/1-Выплата/2-Перемещение
+			//if(v.toDouble() < 0)
 				return MINUS_COLOR;
 			else
 				return PLUS_COLOR;

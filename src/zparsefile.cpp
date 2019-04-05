@@ -140,7 +140,7 @@ int ZParseFile::parseData(const QString &data)
 		prefix[0] = prefix[1];
 		prefix[1] = str_values;
 
-		mapData.insert("Сумма", "-" + mapData.value("Сумма"));
+		//mapData.insert("Сумма", "-" + mapData.value("Сумма"));
 	}
 	
 
@@ -266,7 +266,7 @@ int ZParseFile::parseData(const QString &data)
 	id = 0;
 	str_query = QString("SELECT id FROM operations WHERE date='%1' AND type=%2 AND ur_person=%3 AND partner=%4 AND val=%5")
 		.arg(mapData.value("Дата"))
-		.arg(val < 0 ? 1 : 0)	//Тип: 0-Поступление/1-Выплата/2-Перемещение
+		.arg(fMinus ? 1 : 0) //(val < 0 )	//Тип: 0-Поступление/1-Выплата/2-Перемещение
 		.arg(idUrPerson)
 		.arg(idPartner)
 		.arg(val);
@@ -289,7 +289,7 @@ int ZParseFile::parseData(const QString &data)
 
 	str_query = QString("INSERT INTO operations ( date,type,comment,ur_person,partner,val ) VALUES ('%1', %2, '%3', %4, %5, %6)")
 		.arg(mapData.value("Дата"))
-		.arg(val < 0 ? 1 : 0)	//Тип: 0-Поступление/1-Выплата/2-Перемещение
+		.arg(fMinus ? 1 : 0) //(val < 0 )	//Тип: 0-Поступление/1-Выплата/2-Перемещение
 		.arg(mapData.value("НазначениеПлатежа", " "))
 		.arg(idUrPerson)
 		.arg(idPartner)

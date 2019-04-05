@@ -36,6 +36,9 @@ private slots:
 private:
 	void readSettings();
 	void writeSettings();
+	void f();
 };
+
+unsigned long fZ();
 
 #endif
