@@ -15,6 +15,7 @@ ZOperationsForm::ZOperationsForm()
 	connect(ui.cmdAddPartner, SIGNAL(clicked()), this, SLOT(addAddPartner()));
 	connect(ui.cmdAddSection, SIGNAL(clicked()), this, SLOT(addAddSection()));
 	connect(ui.cmdAddProject, SIGNAL(clicked()), this, SLOT(addAddProject()));
+	showEvent(NULL);
 }
 
 ZOperationsForm::~ZOperationsForm(){}
@@ -38,7 +39,7 @@ int ZOperationsForm::init( QSqlDatabase &database, const QString &table, int id 
 	QString stringQuery = QString("SELECT date,type,comment,ur_person,partner,section,project,val FROM operations WHERE id = %1").arg(curEditId);
 
 	// new record
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 	{
 		ui.dateEdit->setDate(QDate::currentDate());
 		ui.cboType->setCurrentIndex(0);
@@ -80,7 +81,7 @@ void ZOperationsForm::applyChanges()
 {
 	QString text, stringQuery;
 
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 		stringQuery = QString("INSERT INTO operations ( date,type,comment,ur_person,partner,section,project,val ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 	else
 		stringQuery = QString("UPDATE operations SET date=?, type=?, comment=?, ur_person=?, partner=?, section=?, project=?, val=?  WHERE id=%1").arg(curEditId);
@@ -116,7 +117,7 @@ void ZOperationsForm::applyChanges()
 void ZOperationsForm::addUrPerson()
 {
 	ZEditAbstractForm *pD = new ZUrPersonsForm;
-	pD->init(m_DB, "ur_persons", -1);
+	pD->init(m_DB, "ur_persons", ADD_UNIC_CODE);
 	pD->exec();
 	loadItemsToCombobox(ui.cboUrPerson, "ur_persons");
 }
@@ -124,7 +125,7 @@ void ZOperationsForm::addUrPerson()
 void ZOperationsForm::addAddPartner()
 {
 	ZEditAbstractForm *pD = new ZPartnersForm;
-	pD->init(m_DB, "partners", -1);
+	pD->init(m_DB, "partners", ADD_UNIC_CODE);
 	pD->exec();
 	loadItemsToCombobox(ui.cboPartner, "partners");
 }
@@ -132,7 +133,7 @@ void ZOperationsForm::addAddPartner()
 void ZOperationsForm::addAddSection()
 {
 	ZEditAbstractForm *pD = new ZSectionsForm;
-	pD->init(m_DB, "sections", -1);
+	pD->init(m_DB, "sections", ADD_UNIC_CODE);
 	pD->exec();
 	loadItemsToCombobox(ui.cboSection, "sections");
 }
@@ -140,7 +141,7 @@ void ZOperationsForm::addAddSection()
 void ZOperationsForm::addAddProject()
 {
 	ZEditAbstractForm *pD = new ZEditBaseForm;
-	pD->init(m_DB, "projects", -1);
+	pD->init(m_DB, "projects", ADD_UNIC_CODE);
 	pD->exec();
 	loadItemsToCombobox(ui.cboProject, "projects");
 }

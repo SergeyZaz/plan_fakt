@@ -20,7 +20,7 @@ int ZUrPersonsForm::init( QSqlDatabase &database, const QString &table, int id )
 	QString stringQuery = QString("SELECT name,full_name,comment,inn,kpp FROM ur_persons WHERE id = %1").arg(curEditId);
 
 	// new record
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 	{
 		ui.txtName->setText("");
 		ui.txtNameFull->setText("");
@@ -56,7 +56,7 @@ void ZUrPersonsForm::applyChanges()
 {
 	QString text, stringQuery;
 
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 		stringQuery = QString("INSERT INTO ur_persons ( name,full_name,comment,inn,kpp ) VALUES (?, ?, ?, ?, ?)");
 	else
 		stringQuery = QString("UPDATE ur_persons SET name=?, full_name=?, comment=?, inn=? , kpp=? WHERE id=%1").arg(curEditId);

@@ -13,9 +13,11 @@ public:
 	~ZPartnersForm();
 
 	int init( QSqlDatabase &database, const QString &table, int id );
+	void showEvent(QShowEvent*);
 
 protected slots:
 	void applyChanges();
+	void addAddSection();
 
 };
 

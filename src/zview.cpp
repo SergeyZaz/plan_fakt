@@ -304,7 +304,7 @@ int ZView::openEditor(int id)
 
 	printf("edit id = %d\n", id);
 
-	if(!pEditForm || id == 0)
+	if(!pEditForm || id == 0 || id == -1)
 		return 0;
 
 	if(!pEditForm->init(m_DB, mTable, id))
@@ -426,8 +426,8 @@ void ZView::clickedTbl(const QModelIndex &index)
 	QModelIndex indx = sortModel.mapToSource(index);
 	int id = model->data(model->index(indx.row(), 0)).toInt();
 
-	ui.cmdDel->setEnabled(id!=0); // удалить нельзя
-	ui.cmdEdit->setEnabled(id!=0); // редактировать нельзя
+	ui.cmdDel->setEnabled(id>0); // удалить нельзя
+	ui.cmdEdit->setEnabled(id>0); // редактировать нельзя
 
 	emit setCurrentElem(QEvent::MouseButtonRelease, id);
 }

@@ -38,7 +38,8 @@ ZMainWindow::ZMainWindow()
 	connect(ui.actOperations, SIGNAL(triggered()), this,SLOT(slotOpenOperationsDialog()));
 
 	readSettings();
-	readIniFile();
+	if(readIniFile()==0)
+		exit(0);
 }
 
 ZMainWindow::~ZMainWindow()
@@ -67,7 +68,7 @@ void ZMainWindow::slotAbout()
 
 QString key, key_id;
 #define GET_KEY(key) QCryptographicHash::hash("Zaz" + key.toLocal8Bit(), QCryptographicHash::Md5).toHex()
-#define TRIAL_NUM_DAYS	30
+#define TRIAL_NUM_DAYS	15
 void ZMainWindow::f()
 {
 	if(key_id == GET_KEY(key))

@@ -2,14 +2,24 @@
 #include <QSqlError>
 #include <QMessageBox>
 #include "zpartnersform.h"
+#include "zsectionsform.h"
 
 ZPartnersForm::ZPartnersForm()
 {
 	ui.setupUi(this);
 	connect(ui.cmdSave, SIGNAL(clicked()), this, SLOT(applyChanges()));
+	connect(ui.cmdAddSectionPlus, SIGNAL(clicked()), this, SLOT(addAddSection()));
+	connect(ui.cmdAddSectionMinus, SIGNAL(clicked()), this, SLOT(addAddSection()));
+	showEvent(NULL);
 }
 
 ZPartnersForm::~ZPartnersForm(){}
+
+void ZPartnersForm::showEvent(QShowEvent*)
+{
+	loadItemsToCombobox(ui.cboSectionPlus, "sections", "type=0");
+	loadItemsToCombobox(ui.cboSectionMinus, "sections", "type=1");
+}
 
 int ZPartnersForm::init( QSqlDatabase &database, const QString &table, int id )
 {
@@ -17,16 +27,19 @@ int ZPartnersForm::init( QSqlDatabase &database, const QString &table, int id )
 
 	ui.txtName->setFocus();
 
-	QString stringQuery = QString("SELECT name,full_name,comment,inn,kpp FROM partners WHERE id = %1").arg(curEditId);
+	QString stringQuery = QString("SELECT name,full_name,comment,inn,kpp,section_plus,section_minus FROM partners WHERE id = %1")
+		.arg(curEditId);
 
 	// new record
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 	{
 		ui.txtName->setText("");
 		ui.txtNameFull->setText("");
 		ui.txtComment->setText("");
 		ui.txtINN->setText("");
 		ui.txtKPP->setText("");
+		ui.cboSectionPlus->setCurrentIndex(0);
+		ui.cboSectionMinus->setCurrentIndex(0);
 		return true;
 	}
 
@@ -42,6 +55,18 @@ int ZPartnersForm::init( QSqlDatabase &database, const QString &table, int id )
 			ui.txtComment->setText(query.value(2).toString());
 			ui.txtINN->setText(query.value(3).toString());
 			ui.txtKPP->setText(query.value(4).toString());
+
+			ui.ckbDefault->setChecked((query.value(5).toInt() == 0) && (query.value(6).toInt() == -1));
+			if(ui.ckbDefault->isChecked())
+			{
+				ui.cboSectionPlus->setCurrentIndex(0);
+				ui.cboSectionMinus->setCurrentIndex(0);
+			}
+			else
+			{
+				ui.cboSectionPlus->setCurrentIndex(ui.cboSectionPlus->findData(query.value(5).toInt()));
+				ui.cboSectionMinus->setCurrentIndex(ui.cboSectionMinus->findData(query.value(6).toInt()));
+			}
 		}
 	}	
 	else 
@@ -56,10 +81,10 @@ void ZPartnersForm::applyChanges()
 {
 	QString text, stringQuery;
 
-	if (curEditId == -1)
-		stringQuery = QString("INSERT INTO partners ( name,full_name,comment,inn,kpp ) VALUES (?, ?, ?, ?, ?)");
+	if (curEditId == ADD_UNIC_CODE)
+		stringQuery = QString("INSERT INTO partners ( name,full_name,comment,inn,kpp,section_plus,section_minus ) VALUES (?, ?, ?, ?, ?, ?, ?)");
 	else
-		stringQuery = QString("UPDATE partners SET name=?, full_name=?, comment=?, inn=? , kpp=? WHERE id=%1").arg(curEditId);
+		stringQuery = QString("UPDATE partners SET name=?, full_name=?, comment=?, inn=?, kpp=?, section_plus=?, section_minus=? WHERE id=%1").arg(curEditId);
 
 	QSqlQuery query(m_DB);
 	query.prepare(stringQuery);
@@ -101,6 +126,17 @@ void ZPartnersForm::applyChanges()
 	}
 	query.addBindValue(text);
 
+	if(ui.ckbDefault->isChecked())
+	{
+		query.addBindValue(0);
+		query.addBindValue(-1);
+	}
+	else
+	{
+		query.addBindValue(ui.cboSectionPlus->itemData(ui.cboSectionPlus->currentIndex(), Qt::UserRole));
+		query.addBindValue(ui.cboSectionMinus->itemData(ui.cboSectionMinus->currentIndex(), Qt::UserRole));
+	}
+
 	if(!query.exec())
 	{
 		QMessageBox::critical(this, tr("Îøèáêà"), query.lastError().text());
@@ -108,4 +144,12 @@ void ZPartnersForm::applyChanges()
 	}
 	
 	accept();
+}
+
+void ZPartnersForm::addAddSection()
+{
+	ZEditAbstractForm *pD = new ZSectionsForm;
+	pD->init(m_DB, "sections", ADD_UNIC_CODE);
+	pD->exec();
+	showEvent(NULL);
 }

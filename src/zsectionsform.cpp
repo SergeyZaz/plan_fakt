@@ -20,7 +20,7 @@ int ZSectionsForm::init( QSqlDatabase &database, const QString &table, int id )
 	QString stringQuery = QString("SELECT name,type FROM sections WHERE id = %1").arg(curEditId);
 
 	// new record
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 	{
 		ui.txtName->setText("");
 		ui.cboType->setCurrentIndex(0);
@@ -50,7 +50,7 @@ void ZSectionsForm::applyChanges()
 {
 	QString text, stringQuery;
 
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 		stringQuery = QString("INSERT INTO sections ( name,type ) VALUES (?, ?)");
 	else
 		stringQuery = QString("UPDATE sections SET name=?, type=? WHERE id=%1").arg(curEditId);

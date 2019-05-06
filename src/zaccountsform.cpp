@@ -9,6 +9,7 @@ ZAccountsForm::ZAccountsForm()
 	ui.setupUi(this);
 	connect(ui.cmdSave, SIGNAL(clicked()), this, SLOT(applyChanges()));
 	connect(ui.cmdAddUrPerson, SIGNAL(clicked()), this, SLOT(addUrPerson()));
+	showEvent(NULL);
 }
 
 ZAccountsForm::~ZAccountsForm(){}
@@ -27,7 +28,7 @@ int ZAccountsForm::init( QSqlDatabase &database, const QString &table, int id )
 	QString stringQuery = QString("SELECT name,comment,type,ur_person,bik,bank,account,val FROM accounts WHERE id = %1").arg(curEditId);
 
 	// new record
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 	{
 		ui.txtName->setText("");
 		ui.txtComment->setText("");
@@ -69,7 +70,7 @@ void ZAccountsForm::applyChanges()
 {
 	QString text, stringQuery;
 
-	if (curEditId == -1)
+	if (curEditId == ADD_UNIC_CODE)
 		stringQuery = QString("INSERT INTO accounts ( name,comment,type,ur_person,bik,bank,account,val ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 	else
 		stringQuery = QString("UPDATE accounts SET name=?, comment=?, type=?, ur_person=?, bik=?, bank=?, account=?, val=?  WHERE id=%1").arg(curEditId);
@@ -133,7 +134,7 @@ void ZAccountsForm::applyChanges()
 void ZAccountsForm::addUrPerson()
 {
 	ZEditAbstractForm *pD = new ZUrPersonsForm;
-	pD->init(m_DB, "ur_persons", -1);
+	pD->init(m_DB, "ur_persons", ADD_UNIC_CODE);
 	pD->exec();
 	loadItemsToCombobox(ui.cboUrPerson, "ur_persons");
 }

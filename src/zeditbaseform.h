@@ -8,6 +8,8 @@
 #include <QSqlQuery>
 #include "ui_zeditbaseform.h"
 
+#define ADD_UNIC_CODE	-99
+
 class ZEditAbstractForm : public QDialog
 {
 	Q_OBJECT
@@ -28,7 +30,7 @@ public:
 		return 1;
 	}
 	virtual ~ZEditAbstractForm(){};
-	void loadItemsToCombobox( QComboBox *comboBox, const QString &tableName)
+	void loadItemsToCombobox( QComboBox *comboBox, const QString &tableName, const QString &filter = "")
 	{
 		QString txt = comboBox->currentText();
 
@@ -37,7 +39,12 @@ public:
 
 		// clear box
 		comboBox->clear();
-		auto result = query.exec(QString("SELECT id, name FROM %1 ORDER BY name").arg(tableName));
+		int result;
+		if(filter.isEmpty())
+			result = query.exec(QString("SELECT id, name FROM %1 ORDER BY name").arg(tableName));
+		else
+			result = query.exec(QString("SELECT id, name FROM %1 WHERE %2 ORDER BY name").arg(tableName).arg(filter));
+
 		if (result)
 		{
 			while (query.next()) 

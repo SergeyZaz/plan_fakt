@@ -80,7 +80,7 @@ public:
 private:
 	Ui::ZViewClass ui;
 	bool eventFilter(QObject *obj, QEvent *event);
-	int openEditor(int id=-1);
+	int openEditor(int id=ADD_UNIC_CODE);
 	void update();
 public slots:
 	void add();

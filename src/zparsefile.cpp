@@ -119,7 +119,7 @@ int ZParseFile::parseData(const QString &data)
 	{
 		QStringList items = data.split("=");
 		if(!items[1].isEmpty())
-			mapData.insert(items[0], items[1]);
+			mapData.insert(items[0], items[1].replace("'", "\""));
 		return 1;
 	}
 			
@@ -144,7 +144,7 @@ int ZParseFile::parseData(const QString &data)
 	}
 	
 
-	int rc = 0, id = 0, idUrPerson = 0, idPartner = 0;
+	int rc = 0, id = 0, idUrPerson = 0, idPartner = 0, section_plus = 0, section_minus = -1;
 	///////////////////////	ur_persons / partners	///////////////////////
 	for(int i=0; i<2; i++)
 	{
@@ -196,6 +196,27 @@ int ZParseFile::parseData(const QString &data)
 			else
 			{
 				message(query.lastError().text());
+			}
+		}
+		else
+		{
+			if(i==1)
+			{
+				str_query = QString("SELECT section_plus,section_minus FROM %1 WHERE id='%2'").arg(table[i]).arg(id);
+				rc = query.exec(str_query);
+				if(rc)
+				{
+					while (query.next()) 
+					{
+						section_plus = query.value(0).toInt();
+						section_minus = query.value(1).toInt();
+						break;
+					}
+				}
+				else
+				{
+					message(query.lastError().text());
+				}
 			}
 		}
 
@@ -287,13 +308,14 @@ int ZParseFile::parseData(const QString &data)
 	if(id > 0)
 		return 0;
 
-	str_query = QString("INSERT INTO operations ( date,type,comment,ur_person,partner,val ) VALUES ('%1', %2, '%3', %4, %5, %6)")
+	str_query = QString("INSERT INTO operations ( date,type,comment,ur_person,partner,val,section ) VALUES ('%1', %2, '%3', %4, %5, %6, %7)")
 		.arg(mapData.value("Дата"))
 		.arg(fMinus ? 1 : 0) //(val < 0 )	//Тип: 0-Поступление/1-Выплата/2-Перемещение
 		.arg(mapData.value("НазначениеПлатежа", " "))
 		.arg(idUrPerson)
 		.arg(idPartner)
-		.arg(val);
+		.arg(val)
+		.arg(fMinus ? section_minus : section_plus);
 
 	mapData.clear();
 
@@ -308,9 +330,10 @@ int ZParseFile::parseData(const QString &data)
 
 void ZParseFile::message(const QString& txt)
 {
-	QString msg = txt;
-	msg = QTextCodec::codecForName("UTF-8")->toUnicode(QTextCodec::codecForName("windows-1251")->fromUnicode(msg));
-	QMessageBox::critical(NULL, QString("Ошибка"), msg);
+//	QString msg = txt;
+	QMessageBox::critical(NULL, QString("Ошибка"), txt);
+//	msg = QTextCodec::codecForName("UTF-8")->toUnicode(QTextCodec::codecForName("windows-1251")->fromUnicode(msg));
+//	QMessageBox::critical(NULL, QString("Ошибка"), msg);
 	puts(txt.toStdString().c_str());
 }
 

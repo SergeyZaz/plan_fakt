@@ -50,7 +50,7 @@ int ZEditBaseForm::init(QSqlDatabase &db, const QString &tbl, int id)
 	ui.txtComment->setText("");
 	ui.txtName->setText("");
 
-	if(curEditId==-1)
+	if(curEditId==ADD_UNIC_CODE)
 		return 1;
 
 	
@@ -101,7 +101,7 @@ void ZEditBaseForm::applySlot()
 	QString tName = ui.txtName->text();
 	QString tComm = ui.txtComment->toPlainText();
 
-	if(curEditId==-1)
+	if(curEditId==ADD_UNIC_CODE)
 	{
 		if(fNeedComment)
 			sQry = QString("INSERT INTO %1(id, \"name\", \"comment\") VALUES(nextval('%1_id_seq'), '%2', '%3')")
