@@ -16,11 +16,14 @@ ZProtokol::ZProtokol(QWidget *parent)
 
 	ui.dateStart->setDate(QDate::currentDate().addYears(-1));
 	ui.dateEnd->setDate(QDate::currentDate());
+	
+	//ui.dateStart->setDate(QDate(2019, 01, 01));
+	//ui.dateEnd->setDate(QDate(2019, 01, 31));
 
 	setModal(true);
 
 	connect(ui.cmdBuild, SIGNAL(clicked()), this, SLOT(buildProtokol()));
-	connect(ui.cmdSave, SIGNAL(clicked()), this, SLOT(saveProtokol()));		
+	connect(ui.cmdSave, SIGNAL(clicked()), this, SLOT(saveProtokol()));	
 }
 
 ZProtokol::~ZProtokol()
@@ -138,13 +141,13 @@ void ZProtokol::buildProtokol()
 
 	ui.tree->clear();
 	
-	QTreeWidgetItem *pItem, *pItemRoot;
-	QSqlQuery query;
+	QTreeWidgetItem *pItem, *pItemRoot, *pItemGroup;
+	QSqlQuery query1, query2;
 	int rc, id, j;
-	double summa, summaPlus, summaMinus;
+	double summa;
 	QListWidgetItem *pListItem;
 	QString sUrPersons, sProjects;
-	QFont fnt;
+	QFont fnt;	
 
 	sUrPersons = "";
 	for(i=0; i<ui.listUrPersons->count(); i++)
@@ -164,116 +167,194 @@ void ZProtokol::buildProtokol()
 	}
 	sProjects.chop(1);
 
-	//Qt::UserRole = 0-Доходы/1-Расходы/2-Прибыль
-
-	for(i=0; i<2; i++)
+	for(int ii=0; ii<3; ii++)
 	{
-		pItemRoot = new QTreeWidgetItem(ui.tree);
-		pItemRoot->setText(0, i == 0 ? tr("Доходы") : tr("Расходы"));
-		fnt = pItemRoot->font(0);
-		fnt.setBold(true);
-		pItemRoot->setFont(0, fnt);
-		pItemRoot->setData(0, Qt::UserRole, i);
-		ui.tree->addTopLevelItem(pItemRoot);
-
-		pItem = new QTreeWidgetItem(pItemRoot);
-		pItem->setText(0, i == 0 ? tr("Нераспределенный доход") : tr("Нераспределенный расход"));
-		pItem->setData(0, Qt::UserRole, i);
-
-		// нераспределенный расход это тоже что и нераспределенный доход только с типом операции = 1
-		for(j=1; j<l_Intervals.size(); j++)
+		pItemGroup = new QTreeWidgetItem(ui.tree);
+		switch(ii)
 		{
-			summa = 0;
-			text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND date >= '%4' AND date < '%5' AND section=0")
-				.arg(i)
-				.arg(sUrPersons)
-				.arg(sProjects)
-				.arg(l_Intervals.at(j-1).toString("yyyy-MM-dd"))
-				.arg(l_Intervals.at(j).toString("yyyy-MM-dd")
-				.arg(id));
-			if (query.exec(text))
-			{
-				while (query.next()) 
-				{
-					summa += query.value(0).toDouble();
-				}
-			}
-			pItem->setText(j, QString::number(summa, 'f', 2));
+		case 1:
+			pItemGroup->setText(0, tr("инвестиционный поток"));
+			break;
+		case 2:
+			pItemGroup->setText(0, tr("финансовый поток"));
+			break;
+		default:
+			pItemGroup->setText(0, tr("операционный поток"));
+			break;
 		}
-
-		rc = query.exec(QString("SELECT id,name FROM sections WHERE type=%1 AND id>0 ORDER BY name ").arg(i));
-		if (rc)
+		fnt = pItemGroup->font(0);
+		fnt.setBold(true);
+		pItemGroup->setFont(0, fnt);
+		//pItemGroup->setData(0, Qt::UserRole+1, ii);
+		ui.tree->addTopLevelItem(pItemGroup);
+		
+		for(i=0; i<2; i++)
 		{
-			while (query.next()) 
-			{
-				pItem = new QTreeWidgetItem(pItemRoot);
-				pItem->setText(0, query.value(1).toString().simplified());
-				pItem->setData(0, Qt::UserRole, i);
-				id = query.value(0).toInt();
-				pItem->setData(0, Qt::UserRole+1, id);
+			pItemRoot = new QTreeWidgetItem(pItemGroup);
+			pItemRoot->setText(0, i == 0 ? tr("Поступления") : tr("Выплаты"));
+			pItemRoot->setData(0, Qt::UserRole, i == 0 ? 1 : -1);
+			ui.tree->addTopLevelItem(pItemRoot);
 
-				for(j=1; j<l_Intervals.size(); j++)
+			rc = query1.exec(QString("SELECT id,name FROM sections WHERE type=%1 AND parent=%2 ORDER BY name ").arg(i).arg(ii));
+			if (rc)
+			{
+				while (query1.next()) 
 				{
-					summa = 0;
-					text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND date >= '%4' AND date < '%5' AND section=%6")
-						.arg(i)
-						.arg(sUrPersons)
-						.arg(sProjects)
-						.arg(l_Intervals.at(j-1).toString("yyyy-MM-dd"))
-						.arg(l_Intervals.at(j).toString("yyyy-MM-dd"))
-						.arg(id);
-					if (query.exec(text))
+					pItem = new QTreeWidgetItem(pItemRoot);
+					pItem->setText(0, query1.value(1).toString().simplified());
+					pItem->setData(0, Qt::UserRole, i == 0 ? 1 : -1);
+					id = query1.value(0).toInt();
+					//pItem->setData(0, Qt::UserRole+1, id);
+
+					for(j=1; j<l_Intervals.size(); j++)
 					{
-						while (query.next()) 
+						summa = 0;
+						text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND date >= '%4' AND date < '%5' AND section=%6")
+							.arg(i)
+							.arg(sUrPersons)
+							.arg(sProjects)
+							.arg(l_Intervals.at(j-1).toString("yyyy-MM-dd"))
+							.arg(l_Intervals.at(j).toString("yyyy-MM-dd"))
+							.arg(id);
+						if (query2.exec(text))
 						{
-							summa += query.value(0).toDouble();
+							while (query2.next()) 
+							{
+								summa += query2.value(0).toDouble();
+							}
 						}
+
+#ifndef MONEY_FORMAT
+						pItem->setText(j, QString::number(summa, 'f', 2));
+#else
+						pItem->setText(j, QString("%L1").arg(summa, 0, 'f', 2));
+#endif
+						pItem->setTextAlignment(j, Qt::AlignRight);
 					}
-					pItem->setText(j, QString::number(summa, 'f', 2));
 				}
 			}
 		}
 	}
 
-	QTreeWidgetItem *pItemItog = new QTreeWidgetItem(ui.tree);
-	ui.tree->addTopLevelItem(pItemItog);
-	pItemItog->setText(0, tr("Прибыль"));
-	pItemItog->setData(0, Qt::UserRole, 2);
-	pItemItog->setFont(0, fnt);
-	
-	summa = 0;
-	for(i=1; i<l_Intervals.size(); i++)
-	{
-		for(j=0; j<2; j++)
-		{
-			pItemRoot = ui.tree->topLevelItem(j);
-			if(!pItemRoot)
-				continue;
-			int n = pItemRoot->childCount();
+	//////////////////////// перемещения ////////////////////////
+	pItemGroup = new QTreeWidgetItem(ui.tree);
+	pItemGroup->setText(0, tr("Перемещения"));
+	pItemGroup->setFont(0, fnt);
+	ui.tree->addTopLevelItem(pItemGroup);
 
+	for(i=0; i<2; i++)
+	{
+		pItemRoot = new QTreeWidgetItem(pItemGroup);
+		pItemRoot->setText(0, i == 0 ? tr("Зачисления") : tr("Списания"));
+		pItemRoot->setData(0, Qt::UserRole, i == 0 ? 1 : -1);
+		ui.tree->addTopLevelItem(pItemRoot);
+
+		for(j=1; j<l_Intervals.size(); j++)
+		{
 			summa = 0;
-			for(int ii=0; ii<n; ii++)
+			text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND date >= '%4' AND date < '%5' AND section IN (SELECT id FROM sections WHERE type=%6)")
+				.arg(2)
+				.arg(sUrPersons)
+				.arg(sProjects)
+				.arg(l_Intervals.at(j-1).toString("yyyy-MM-dd"))
+				.arg(l_Intervals.at(j).toString("yyyy-MM-dd"))
+				.arg(i);
+			if (query2.exec(text))
 			{
-				pItem = pItemRoot->child(ii);
-				if(!pItem)
-					continue;
-				summa += pItem->text(i).toDouble();
+				while (query2.next()) 
+				{
+					summa += query2.value(0).toDouble();
+				}
 			}
 
-			pItemRoot->setText(i, QString::number(summa, 'f', 2));
-			pItemRoot->setFont(i, fnt);
-
-			if(j==0)
-				summaPlus = summa;
-			else
-				summaMinus = summa;
+#ifndef MONEY_FORMAT
+			pItemRoot->setText(j, QString::number(summa, 'f', 2));
+#else
+			pItemRoot->setText(j, QString("%L1").arg(summa, 0, 'f', 2));
+#endif
+			pItemRoot->setTextAlignment(j, Qt::AlignRight);
 		}
-		pItemItog->setText(i, QString::number(summaPlus - summaMinus, 'f', 2));
+	}
+	///////////////////////////////////////////////////////////////////
+
+	QTreeWidgetItem *pItemItog = new QTreeWidgetItem(ui.tree);
+	ui.tree->addTopLevelItem(pItemItog);
+	pItemItog->setText(0, tr("Общий денежный поток"));
+	pItemItog->setFont(0, fnt);
+	
+	QTreeWidgetItem *pItemDelta = new QTreeWidgetItem(ui.tree);
+	ui.tree->addTopLevelItem(pItemDelta);
+	pItemDelta->setText(0, tr("Остатки на конец периода"));
+	pItemDelta->setFont(0, fnt);
+	
+	int n = ui.tree->topLevelItemCount();
+	double summaAll = 0;
+	for(i=1; i<l_Intervals.size(); i++)
+	{
+		summa = 0;
+
+		for(j=0; j<n; j++)
+		{
+			summa += getSumma(ui.tree->topLevelItem(j), i);
+		}
+
+#ifndef MONEY_FORMAT
+		pItemItog->setText(i, QString::number(summa, 'f', 2));
+#else
+		pItemItog->setText(i, QString("%L1").arg(summa, 0, 'f', 2));
+#endif
 		pItemItog->setFont(i, fnt);
+		pItemItog->setTextAlignment(i, Qt::AlignRight);
+
+		summaAll += summa;
+#ifndef MONEY_FORMAT
+		pItemDelta->setText(i, QString::number(summaAll, 'f', 2));
+#else
+		pItemDelta->setText(i, QString("%L1").arg(summaAll, 0, 'f', 2));
+#endif
+		pItemDelta->setFont(i, fnt);
+		pItemDelta->setTextAlignment(i, Qt::AlignRight);
+
 		ui.tree->resizeColumnToContents(i);
 	}
 	
 	ui.tree->expandAll();
+}
+	
+double ZProtokol::getSumma(QTreeWidgetItem *pItemRoot, int col)
+{
+	double s = 0;
+
+	if(!pItemRoot)
+		return s;
+
+	int n = pItemRoot->childCount();
+	for(int i=0; i<n; i++)
+	{
+		s += getSumma(pItemRoot->child(i), col);
+	}
+
+	if(n > 0)
+	{
+#ifndef MONEY_FORMAT
+		pItemRoot->setText(col, QString::number(s, 'f', 2));
+#else
+		pItemRoot->setText(col, QString("%L1").arg(s, 0, 'f', 2));
+#endif
+		pItemRoot->setTextAlignment(col, Qt::AlignRight);
+	}
+	else
+	{
+#ifndef MONEY_FORMAT
+		double v = pItemRoot->text(col).toDouble();
+#else
+		double v = pItemRoot->text(col).replace(QChar::Nbsp, "").toDouble();
+#endif
+		int k = pItemRoot->data(0, Qt::UserRole).toInt();
+		if(k!=0)
+			s += v * k;
+	}
+	return s;
 }
 	
 int ZProtokol::saveToFile(const QString &fileName)
@@ -287,42 +368,55 @@ int ZProtokol::saveToFile(const QString &fileName)
 		return 0;
 	}
 
-     QTextStream out(&file);	 
-	 int i, j, k, cilds, n = ui.tree->topLevelItemCount();
-	 QTreeWidgetItem *pItemRoot, *pItem;
+	QTextStream out(&file);	 
+	int i, j, k, l, n = ui.tree->topLevelItemCount();
+	QTreeWidgetItem *pItemRoot, *pItem, *pItemChild;
 
-	 for(j=0; j<cols; j++)
-	 {
-		 out << ui.tree->headerItem()->text(j) << ";";
-		 if(j == 0)
-			 out << ";";
-	 }
-	 out << "\n";
+	for(j=0; j<cols; j++)
+	{
+		out << ui.tree->headerItem()->text(j) << ";";
+		if(j == 0)
+			out << ";;";
+	}
+	out << "\n";
 
-	 for(i=0;i<n;i++)
-	 {
-		 pItemRoot = ui.tree->topLevelItem(i);
-		 for(j=0; j<cols; j++)
-		 {
-			 out << pItemRoot->text(j) << ";";
-			 if(j == 0)
-				 out << ";";
-		 }
-		 out << "\n";
+	for(i=0;i<n;i++)
+	{
+		pItemRoot = ui.tree->topLevelItem(i);
+		for(j=0; j<cols; j++)
+		{
+			out << pItemRoot->text(j) << ";";
+			if(j == 0)
+				out << ";;";
+		}
+		out << "\n";
 
-		 cilds = pItemRoot->childCount();
-		 for(k=0; k<cilds; k++)
-		 {
-			 pItem = pItemRoot->child(k);
-			 for(j=0; j<cols; j++)
-			 {
-				 if(j == 0)
-					 out << ";";
-				 out << pItem->text(j) << ";";
-			 }
-			 out << "\n";
-		 }
-	 }
+		for(k=0; k<pItemRoot->childCount(); k++)
+		{
+			pItem = pItemRoot->child(k);
+			for(j=0; j<cols; j++)
+			{
+				if(j == 0)
+					out << ";";
+				out << pItem->text(j) << ";";
+				if(j == 0)
+					out << ";";
+			}
+			out << "\n";
+
+			for(j=0; j<pItem->childCount(); j++)
+			{
+				pItemChild = pItem->child(j);
+				for(l=0; l<cols; l++)
+				{
+					if(l == 0)
+						out << ";;";
+					out << pItemChild->text(l) << ";";
+				}
+				out << "\n";
+			}
+		}
+	}
 
 	return 1;
 }

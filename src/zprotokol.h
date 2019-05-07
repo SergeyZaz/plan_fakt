@@ -9,6 +9,7 @@ class ZProtokol : public QDialog
 	Q_OBJECT
 	
 	void loadItemsToListBox( QListWidget *listBox, const QString &tableName);
+	double getSumma(QTreeWidgetItem *pItem, int col);
 	int saveToFile(const QString &fileName);
 
 public:

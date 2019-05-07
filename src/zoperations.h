@@ -8,8 +8,8 @@ class ZOperations : public ZMdiChild
 {
 	QAction *actSetProject;
 	QAction *actSetSection;
-	void loadItemsToList(QStringList &list, const QString &tableName);
-	int updateSelectedItems(const QString &elemName, const QString &tableName, const QString &attName);
+	void loadItemsToList(QStringList &l_Text, QList<int> &l_id, const QString &tableName);
+	int updateSelectedItems(int setId, const QString &attName);
 	void execCustomAction(const QString &txt);
 
 public:

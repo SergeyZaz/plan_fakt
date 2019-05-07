@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>491</width>
-    <height>130</height>
+    <height>150</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -79,6 +79,38 @@
         <item>
          <property name="text">
           <string>Расходы</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="nameText_3">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Группа:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="cboGroup">
+        <item>
+         <property name="text">
+          <string>операционный поток</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>инвестиционный поток</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>финансовый поток</string>
          </property>
         </item>
        </widget>

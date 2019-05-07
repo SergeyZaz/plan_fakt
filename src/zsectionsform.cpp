@@ -17,13 +17,14 @@ int ZSectionsForm::init( QSqlDatabase &database, const QString &table, int id )
 
 	ui.txtName->setFocus();
 
-	QString stringQuery = QString("SELECT name,type FROM sections WHERE id = %1").arg(curEditId);
+	QString stringQuery = QString("SELECT name,type,parent FROM sections WHERE id = %1").arg(curEditId);
 
 	// new record
 	if (curEditId == ADD_UNIC_CODE)
 	{
 		ui.txtName->setText("");
 		ui.cboType->setCurrentIndex(0);
+		ui.cboGroup->setCurrentIndex(0);
 		return true;
 	}
 
@@ -36,6 +37,7 @@ int ZSectionsForm::init( QSqlDatabase &database, const QString &table, int id )
 		{
 			ui.txtName->setText(query.value(0).toString());
 			ui.cboType->setCurrentIndex(query.value(1).toInt());
+			ui.cboGroup->setCurrentIndex(query.value(2).toInt());
 		}
 	}	
 	else 
@@ -51,9 +53,9 @@ void ZSectionsForm::applyChanges()
 	QString text, stringQuery;
 
 	if (curEditId == ADD_UNIC_CODE)
-		stringQuery = QString("INSERT INTO sections ( name,type ) VALUES (?, ?)");
+		stringQuery = QString("INSERT INTO sections ( name,type,parent ) VALUES (?, ?, ?)");
 	else
-		stringQuery = QString("UPDATE sections SET name=?, type=? WHERE id=%1").arg(curEditId);
+		stringQuery = QString("UPDATE sections SET name=?, type=?, parent=? WHERE id=%1").arg(curEditId);
 
 	QSqlQuery query(m_DB);
 	query.prepare(stringQuery);
@@ -67,6 +69,7 @@ void ZSectionsForm::applyChanges()
 	query.addBindValue(text);
 
 	query.addBindValue(ui.cboType->currentIndex());
+	query.addBindValue(ui.cboGroup->currentIndex());
 
 	if(!query.exec())
 	{

@@ -692,19 +692,35 @@ QVariant ZTableModel::data(const QModelIndex & index, int role) const
 		v = QSqlTableModel::data(index, Qt::DisplayRole);
 		if(v.type() == QVariant::Double)
 		{
-			if(QSqlTableModel::data(this->index(row, 2), Qt::DisplayRole).toInt() == 1)//Тип: 0-Поступление/1-Выплата/2-Перемещение
-			//if(v.toDouble() < 0)
+			switch(QSqlTableModel::data(this->index(row, 2), Qt::DisplayRole).toInt())
+			{
+			case 1://Тип: 0-Поступление/1-Выплата/2-Перемещение
 				return MINUS_COLOR;
-			else
+			case 0:
 				return PLUS_COLOR;
+			default:
+				return Qt::gray;
+			}
+		}
+	}
+	if(role==Qt::TextAlignmentRole)
+	{
+		v = QSqlTableModel::data(index, Qt::DisplayRole);
+		if(v.type() == QVariant::Double)
+		{
+			return Qt::AlignRight;
 		}
 	}
 
 	v = QSqlTableModel::data(index, role);
 	
 	if(v.type() == QVariant::Double)
+#ifndef MONEY_FORMAT
 		return QString::number(v.toDouble(), 'f', 2);
-	
+#else
+		return QString("%L1").arg(v.toDouble(), 0, 'f', 2);
+#endif
+
 	switch(role)
 	{
 	case Qt::DisplayRole:
@@ -739,9 +755,16 @@ Qt::ItemFlags ZTableModel::flags(const QModelIndex &) const
 bool ZSortFilterProxyModel::lessThan(const QModelIndex &left,
                                        const QModelIndex &right) const
  {
+	 bool ok;
+#ifndef MONEY_FORMAT
      QVariant leftData = sourceModel()->data(left);
      QVariant rightData = sourceModel()->data(right);
-	 bool ok;
+#else
+	 QString leftData = sourceModel()->data(left).toString();
+     QString rightData = sourceModel()->data(right).toString();
+	 leftData = leftData.replace(QChar::Nbsp, "");
+	 rightData = rightData.replace(QChar::Nbsp, "");
+#endif
 	 double d = leftData.toDouble(&ok);
 	 if ( ok )
 	 {
