@@ -21,6 +21,9 @@ protected slots:
 	void addAddPartner();
 	void addAddSection();
 	void addAddProject();
+	void addAddAccount();
+	void cboTypeChanged(int);
+	void cboUrPersonChanged(int);
 
 };
 

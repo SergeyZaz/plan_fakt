@@ -30,13 +30,13 @@ void ZOperations::loadItemsToList(QStringList &l_Text, QList<int> &l_id, const Q
 				switch(query.value(2).toInt())
 				{
 				case 1:
-					strQuery += tr("(инвестиционный поток)");
+					strQuery += tr(" (инвестиционный поток)");
 					break;
 				case 2:
-					strQuery += tr("(финансовый поток)");
+					strQuery += tr(" (финансовый поток)");
 					break;
 				default:
-					strQuery += tr("(операционный поток)");
+					strQuery += tr(" (операционный поток)");
 					break;
 				}
 			}
@@ -145,13 +145,14 @@ void ZOperations::initDB(QSqlDatabase &m_DB, const QString &m_TblName)
   section integer, -- статья
   project integer, -- проект
   val double precision, -- Сумма
+  account integer, -- Счет
 */
 	QList<int> hideColumns;
 	QStringList headers;
 	QList<int> cRem;
 	
 	hideColumns << 0;
-	headers <<  tr("id") << tr("Дата операции") << tr("Тип")  << tr("Комментарий") << tr("Юр.лицо") << tr("Контрагент") << tr("Статья") << tr("Проект") << tr("Сумма");
+	headers <<  tr("id") << tr("Дата операции") << tr("Тип")  << tr("Комментарий") << tr("Юр.лицо") << tr("Контрагент") << tr("Статья") << tr("Проект") << tr("Сумма") << tr("Счёт");
 
 	m_tbl->setTable(m_TblName, headers, cRem);
 	m_tbl->setCustomEditor(new ZOperationsForm);
@@ -166,8 +167,10 @@ void ZOperations::initDB(QSqlDatabase &m_DB, const QString &m_TblName)
 	m_tbl->setRelation(5, "partners", "id", "name");
 	m_tbl->setRelation(6, "sections", "id", "name");
 	m_tbl->setRelation(7, "projects", "id", "name");
+	m_tbl->setRelation(9, "accounts", "id", "name");
 	
 	m_tbl->init(hideColumns);
 	m_tbl->moveSection(3, 8);
+	m_tbl->moveSection(9, 4);
 }
 

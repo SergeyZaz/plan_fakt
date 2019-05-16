@@ -15,6 +15,7 @@ public:
 
 	int init( QSqlDatabase &database, const QString &table, int id );
 	void showEvent(QShowEvent*);
+	void setSectionsType(int indx);
 
 protected slots:
 	void applyChanges();

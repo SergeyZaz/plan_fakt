@@ -11,6 +11,11 @@ ZSectionsForm::ZSectionsForm()
 
 ZSectionsForm::~ZSectionsForm(){}
 
+void ZSectionsForm::setSectionsType(int indx)
+{
+	ui.cboType->setCurrentIndex(indx);
+}
+
 int ZSectionsForm::init( QSqlDatabase &database, const QString &table, int id )
 {
 	ZEditAbstractForm::init(database, table, id);

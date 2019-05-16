@@ -19,6 +19,11 @@ void ZAccountsForm::showEvent(QShowEvent*)
 	loadItemsToCombobox(ui.cboUrPerson, "ur_persons");
 }
 
+void ZAccountsForm::setSectionsType(int indx)
+{
+	ui.cboUrPerson->setCurrentIndex(ui.cboUrPerson->findData(indx));
+}
+
 int ZAccountsForm::init( QSqlDatabase &database, const QString &table, int id )
 {
 	ZEditAbstractForm::init(database, table, id);

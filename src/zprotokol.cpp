@@ -13,13 +13,11 @@ ZProtokol::ZProtokol(QWidget *parent)
 
 	loadItemsToListBox(ui.listUrPersons, "ur_persons");
 	loadItemsToListBox(ui.listProjects, "projects");
+	loadItemsToListBox(ui.listAccounts, "accounts");
 
-	ui.dateStart->setDate(QDate::currentDate().addYears(-1));
+	ui.dateStart->setDate(QDate(QDate::currentDate().year(), 1, 1));
 	ui.dateEnd->setDate(QDate::currentDate());
 	
-	//ui.dateStart->setDate(QDate(2019, 01, 01));
-	//ui.dateEnd->setDate(QDate(2019, 01, 31));
-
 	setModal(true);
 
 	connect(ui.cmdBuild, SIGNAL(clicked()), this, SLOT(buildProtokol()));
@@ -64,6 +62,7 @@ void ZProtokol::saveProtokol()
 
 void ZProtokol::buildProtokol()
 {
+	int m_SectionsMode = ui.cboSections->currentIndex(); // 0-доходы и расходы, 1-доходы, 2-расходы
 	int m_Inderval = ui.cboInterval->currentIndex();
 	QDate m_dStart = ui.dateStart->date();
 	QDate m_dStop = ui.dateEnd->date();
@@ -146,8 +145,18 @@ void ZProtokol::buildProtokol()
 	int rc, id, j;
 	double summa;
 	QListWidgetItem *pListItem;
-	QString sUrPersons, sProjects;
+	QString sUrPersons, sProjects, sAccounts;
 	QFont fnt;	
+
+	//////////////////// фильтры ////////////////////
+	sAccounts = "";
+	for(i=0; i<ui.listAccounts->count(); i++)
+	{
+		pListItem = ui.listAccounts->item(i);
+		if(pListItem->checkState() == Qt::Checked)
+			sAccounts += QString::number(pListItem->data(Qt::UserRole).toInt()) + ",";
+	}
+	sAccounts.chop(1);
 
 	sUrPersons = "";
 	for(i=0; i<ui.listUrPersons->count(); i++)
@@ -166,6 +175,7 @@ void ZProtokol::buildProtokol()
 			sProjects += QString::number(pListItem->data(Qt::UserRole).toInt()) + ",";
 	}
 	sProjects.chop(1);
+	//////////////////////////////////////////////////
 
 	for(int ii=0; ii<3; ii++)
 	{
@@ -190,6 +200,21 @@ void ZProtokol::buildProtokol()
 		
 		for(i=0; i<2; i++)
 		{
+			switch(m_SectionsMode)
+			{
+				case 1:// доходы
+					if(i==1)
+					{
+						i++;
+						continue;
+					}
+					break;
+				case 2:// расходы
+					i = 1;
+					break;
+				default:// доходы и расходы
+					break;
+			}
 			pItemRoot = new QTreeWidgetItem(pItemGroup);
 			pItemRoot->setText(0, i == 0 ? tr("Поступления") : tr("Выплаты"));
 			pItemRoot->setData(0, Qt::UserRole, i == 0 ? 1 : -1);
@@ -209,10 +234,11 @@ void ZProtokol::buildProtokol()
 					for(j=1; j<l_Intervals.size(); j++)
 					{
 						summa = 0;
-						text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND date >= '%4' AND date < '%5' AND section=%6")
+						text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND account IN (%4) AND date >= '%5' AND date < '%6' AND section=%7")
 							.arg(i)
 							.arg(sUrPersons)
 							.arg(sProjects)
+							.arg(sAccounts)
 							.arg(l_Intervals.at(j-1).toString("yyyy-MM-dd"))
 							.arg(l_Intervals.at(j).toString("yyyy-MM-dd"))
 							.arg(id);
@@ -244,6 +270,21 @@ void ZProtokol::buildProtokol()
 
 	for(i=0; i<2; i++)
 	{
+		switch(m_SectionsMode)
+		{
+		case 1:// доходы
+			if(i==1)
+			{
+				i++;
+				continue;
+			}
+			break;
+		case 2:// расходы
+			i = 1;
+			break;
+		default:// доходы и расходы
+			break;
+		}
 		pItemRoot = new QTreeWidgetItem(pItemGroup);
 		pItemRoot->setText(0, i == 0 ? tr("Зачисления") : tr("Списания"));
 		pItemRoot->setData(0, Qt::UserRole, i == 0 ? 1 : -1);
@@ -328,6 +369,8 @@ double ZProtokol::getSumma(QTreeWidgetItem *pItemRoot, int col)
 	if(!pItemRoot)
 		return s;
 
+	QString str = pItemRoot->text(0);
+
 	int n = pItemRoot->childCount();
 	for(int i=0; i<n; i++)
 	{
@@ -336,10 +379,13 @@ double ZProtokol::getSumma(QTreeWidgetItem *pItemRoot, int col)
 
 	if(n > 0)
 	{
+		double v = s;
+		if(!pItemRoot->font(0).bold())
+			v = fabs(s);
 #ifndef MONEY_FORMAT
-		pItemRoot->setText(col, QString::number(s, 'f', 2));
+		pItemRoot->setText(col, QString::number(v, 'f', 2));
 #else
-		pItemRoot->setText(col, QString("%L1").arg(s, 0, 'f', 2));
+		pItemRoot->setText(col, QString("%L1").arg(v, 0, 'f', 2));
 #endif
 		pItemRoot->setTextAlignment(col, Qt::AlignRight);
 	}
