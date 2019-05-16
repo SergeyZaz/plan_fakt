@@ -18,6 +18,7 @@
 #include "zaccounts.h"
 #include "zoperations.h"
 #include "zparsefile.h"
+#include "zparsecsvfile.h"
 #include "zprotokol.h"
 
 #define	CFG_FILE "config.ini"
@@ -29,6 +30,7 @@ ZMainWindow::ZMainWindow()
 	connect(ui.actAbout, SIGNAL(triggered()), this, SLOT(slotAbout()));
 	connect(ui.actAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 	connect(ui.actOpenFile, SIGNAL(triggered()), this,	SLOT(slotOpenFile()));
+	connect(ui.actOpenFileCSV, SIGNAL(triggered()), this,	SLOT(slotOpenCSVFile()));
 	connect(ui.actAccounts, SIGNAL(triggered()), this,	SLOT(slotOpenAccountsDialog()));
 	connect(ui.actPersons, SIGNAL(triggered()), this,	SLOT(slotOpenPersonsDialog()));
 	connect(ui.actSections, SIGNAL(triggered()), this,	SLOT(slotOpenSectionsDialog()));
@@ -171,10 +173,22 @@ void ZMainWindow::slotUpdate()
 
 void ZMainWindow::slotOpenFile()
 {
-	QString fileName = QFileDialog::getOpenFileName(this);
+	QString fileName = QFileDialog::getOpenFileName(this, "Выбор файла для импорта", "", "Текстовые файлы (*.txt);;Все файлы (*.*)");
 	if (fileName.isEmpty()) 
 		return;
 	ZParseFile pFile;
+	if(pFile.loadFile(fileName))
+	{
+		slotUpdate();
+	}
+}
+
+void ZMainWindow::slotOpenCSVFile()
+{
+	QString fileName = QFileDialog::getOpenFileName(this, "Выбор файла для импорта", "", "CSV-файлы (*.csv);;Все файлы (*.*)");
+	if (fileName.isEmpty()) 
+		return;
+	ZParseCSVFile pFile;
 	if(pFile.loadFile(fileName))
 	{
 		slotUpdate();

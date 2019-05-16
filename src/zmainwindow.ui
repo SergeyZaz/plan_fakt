@@ -69,6 +69,7 @@
      <string>Файл</string>
     </property>
     <addaction name="actOpenFile"/>
+    <addaction name="actOpenFileCSV"/>
     <addaction name="actProtokol"/>
     <addaction name="actClose"/>
    </widget>
@@ -121,10 +122,10 @@
   </widget>
   <action name="actOpenFile">
    <property name="text">
-    <string>Импорт</string>
+    <string>Импорт из txt</string>
    </property>
    <property name="toolTip">
-    <string>Импорт из файла</string>
+    <string>Импорт из файла txt</string>
    </property>
   </action>
   <action name="actClose">
@@ -181,6 +182,14 @@
   <action name="actOperations">
    <property name="text">
     <string>Операции</string>
+   </property>
+  </action>
+  <action name="actOpenFileCSV">
+   <property name="text">
+    <string>Импорт из CSV</string>
+   </property>
+   <property name="toolTip">
+    <string>Импорт из файла CSV</string>
    </property>
   </action>
  </widget>

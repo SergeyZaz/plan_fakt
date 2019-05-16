@@ -142,9 +142,10 @@ int ZParseFile::parseData(const QString &data)
 		prefix[0] = prefix[1];
 		prefix[1] = str_values;
 
-		//mapData.insert("Сумма", "-" + mapData.value("Сумма"));
+		str_values = prefix[2];
+		prefix[2] = prefix[3];
+		prefix[3] = str_values;
 	}
-	
 
 	int rc = 0, id = 0, idUrPerson = 0, idPartner = 0, section_plus = 0, section_minus = -1, idAccount = 0;
 	///////////////////////	ur_persons / partners	///////////////////////

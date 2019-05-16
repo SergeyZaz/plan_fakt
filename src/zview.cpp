@@ -756,15 +756,10 @@ bool ZSortFilterProxyModel::lessThan(const QModelIndex &left,
                                        const QModelIndex &right) const
  {
 	 bool ok;
-#ifndef MONEY_FORMAT
-     QVariant leftData = sourceModel()->data(left);
-     QVariant rightData = sourceModel()->data(right);
-#else
 	 QString leftData = sourceModel()->data(left).toString();
      QString rightData = sourceModel()->data(right).toString();
 	 leftData = leftData.replace(QChar::Nbsp, "");
 	 rightData = rightData.replace(QChar::Nbsp, "");
-#endif
 	 double d = leftData.toDouble(&ok);
 	 if ( ok )
 	 {

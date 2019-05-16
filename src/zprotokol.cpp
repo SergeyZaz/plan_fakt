@@ -54,10 +54,19 @@ void ZProtokol::saveProtokol()
 	if (fileName.isEmpty()) 
 		return;
 
+#ifdef SAVETOXML
+	if(!fileName.endsWith(".xlsx"))
+		fileName += ".xlsx";
+
+	saveToXLSFile(fileName);
+	return;
+#endif //SAVETOXML
+
 	if(!fileName.endsWith(".csv"))
 		fileName += ".csv";
 
 	saveToFile(fileName);
+
 }
 
 void ZProtokol::buildProtokol()
@@ -391,11 +400,7 @@ double ZProtokol::getSumma(QTreeWidgetItem *pItemRoot, int col)
 	}
 	else
 	{
-#ifndef MONEY_FORMAT
-		double v = pItemRoot->text(col).toDouble();
-#else
 		double v = pItemRoot->text(col).replace(QChar::Nbsp, "").toDouble();
-#endif
 		int k = pItemRoot->data(0, Qt::UserRole).toInt();
 		if(k!=0)
 			s += v * k;
@@ -431,7 +436,7 @@ int ZProtokol::saveToFile(const QString &fileName)
 		pItemRoot = ui.tree->topLevelItem(i);
 		for(j=0; j<cols; j++)
 		{
-			out << pItemRoot->text(j) << ";";
+			out << pItemRoot->text(j).replace(".", ",") << ";";
 			if(j == 0)
 				out << ";;";
 		}
@@ -444,7 +449,7 @@ int ZProtokol::saveToFile(const QString &fileName)
 			{
 				if(j == 0)
 					out << ";";
-				out << pItem->text(j) << ";";
+				out << pItem->text(j).replace(".", ",") << ";";
 				if(j == 0)
 					out << ";";
 			}
@@ -457,12 +462,142 @@ int ZProtokol::saveToFile(const QString &fileName)
 				{
 					if(l == 0)
 						out << ";;";
-					out << pItemChild->text(l) << ";";
+					out << pItemChild->text(l).replace(".", ",") << ";";
 				}
 				out << "\n";
 			}
 		}
 	}
 
+	return 1;
+}
+
+#ifdef SAVETOXML
+#include <QAxObject>
+void setVal2Cell(QAxObject* StatSheet, int row, int col, QString &s)
+{
+	if(!StatSheet)
+		return;
+	// получение указател€ на €чейку [row][col] ((!)нумераци€ с единицы)
+	QAxObject *cell = StatSheet->querySubObject("Cells(Int,Int)", row, col);
+	// вставка значени€ переменной data (любой тип, приводимый к QVariant) в полученную €чейку
+	if(!cell)
+		return;
+	s = s.replace(QChar::Nbsp, "");
+	bool ok;
+	double v = s.toDouble(&ok);
+	if(ok)
+		cell->dynamicCall("SetValue(const QVariant&)", v);
+	else						
+		cell->dynamicCall("SetValue(const QVariant&)", s);
+    delete cell;
+}
+#endif //SAVETOXML
+
+int ZProtokol::saveToXLSFile(const QString &fileName)
+{
+#ifdef SAVETOXML
+	int cols = ui.tree->headerItem()->columnCount();
+
+	// получаем указатель на Excel
+    QAxObject *mExcel = new QAxObject("Excel.Application",this);
+	//делаем его видимым
+	//mExcel->dynamicCall( "SetVisible(bool)", TRUE ); 
+    // получаем указатель на книги
+    QAxObject *workbooks = mExcel->querySubObject("Workbooks");
+	if(!workbooks)
+		return 0;
+    // добавл€ем книгу
+	workbooks->dynamicCall("Add");
+    // получаем указатель на текущую книгу
+	QAxObject *workbook = mExcel->querySubObject("ActiveWorkBook");
+	if(!workbook)
+		return 0;
+    // получаем указатель на листы
+    QAxObject *mSheets = workbook->querySubObject( "Sheets" );
+    // указываем, какой лист выбрать
+    QAxObject *StatSheet = mSheets->querySubObject( "Item(const QVariant&)", QVariant("Ћист1") );
+	if(!StatSheet)
+		return 0;
+
+	int i, j, k, l, n = ui.tree->topLevelItemCount();
+	QTreeWidgetItem *pItemRoot, *pItem, *pItemChild;
+
+	int row = 1, col = 1;
+	for(j=0; j<cols; j++)
+	{
+		setVal2Cell(StatSheet, row, col, ui.tree->headerItem()->text(j));
+		if(j == 0)
+			col+=2;
+		col++;
+	}
+		
+	row++;
+
+	for(i=0;i<n;i++)
+	{
+		pItemRoot = ui.tree->topLevelItem(i);
+		col = 1;
+		for(j=0; j<cols; j++)
+		{
+			setVal2Cell(StatSheet, row, col, pItemRoot->text(j));
+			if(j == 0)
+				col+=2;
+			col++;
+		}
+		row++;
+
+		for(k=0; k<pItemRoot->childCount(); k++)
+		{
+			pItem = pItemRoot->child(k);
+			col = 1;
+			for(j=0; j<cols; j++)
+			{
+				if(j == 0)
+					col++;
+				setVal2Cell(StatSheet, row, col, pItem->text(j));
+				if(j == 0)
+					col++;
+				col++;
+			}
+			row++;
+
+			for(j=0; j<pItem->childCount(); j++)
+			{
+				pItemChild = pItem->child(j);
+				col = 1;
+				for(l=0; l<cols; l++)
+				{
+					if(l == 0)
+						col+=2;
+					setVal2Cell(StatSheet, row, col, pItemChild->text(l));
+					col++;
+				}
+				row++;
+			}
+		}
+	}
+
+	QString tmp_s = fileName;
+	//правм слеши, насколько необходимо не помню
+	tmp_s.replace("/","\\");
+	//говорим excel что вс€кие служебные сообщени€ выводить не надо
+	mExcel->setProperty("DisplayAlerts", 0);
+	//сохран€ем наш файл под сгенерированным именем в каталог с программой
+	workbook->dynamicCall("SaveAs (const QString&)", tmp_s);
+
+	mExcel->setProperty("DisplayAlerts", 1);
+
+	//зачем-то надо, канонично сразу не закомменитировал, теперь не помн
+	workbook->dynamicCall("Close(Boolean)", false);
+
+    delete StatSheet;
+    delete mSheets;
+    delete workbook;
+    delete workbooks;
+	delete mExcel;
+
+	QMessageBox::information(this, QString("¬ыполнено"), QString("ѕротокол сохранен!"));
+#endif //SAVETOXML
 	return 1;
 }

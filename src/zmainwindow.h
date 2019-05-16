@@ -24,6 +24,7 @@ protected:
 private slots:
 	void slotAbout();
 	void slotOpenFile();
+	void slotOpenCSVFile();
 	void slotOpenAccountsDialog();
 	void slotOpenPersonsDialog();
 	void slotOpenSectionsDialog();

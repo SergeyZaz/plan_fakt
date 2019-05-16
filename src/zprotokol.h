@@ -11,6 +11,7 @@ class ZProtokol : public QDialog
 	void loadItemsToListBox( QListWidget *listBox, const QString &tableName);
 	double getSumma(QTreeWidgetItem *pItem, int col);
 	int saveToFile(const QString &fileName);
+	int saveToXLSFile(const QString &fileName);
 
 public:
 	ZProtokol(QWidget *parent = 0);
