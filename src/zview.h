@@ -97,6 +97,7 @@ signals:
 	void errorQuery(const QDateTime &, long , const QString &);
 	void setCurrentElem( QEvent::Type, int );
 	void needUpdate();
+	void needUpdateVal(int);
 };
 
 #endif // ZVIEW_H

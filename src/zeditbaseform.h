@@ -83,6 +83,7 @@ public:
 
 signals:	
 	void errorQuery(const QDateTime &, long , const QString &);
+	void needUpdateVal(int);
 };
 
 class ZEditBaseForm : public ZEditAbstractForm

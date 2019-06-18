@@ -302,10 +302,11 @@ void ZProtokol::buildProtokol()
 		for(j=1; j<l_Intervals.size(); j++)
 		{
 			summa = 0;
-			text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND date >= '%4' AND date < '%5' AND section IN (SELECT id FROM sections WHERE type=%6)")
+			text = QString("SELECT val FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND account IN (%4) AND date >= '%5' AND date < '%6' AND section IN (SELECT id FROM sections WHERE type=%7)")
 				.arg(2)
 				.arg(sUrPersons)
 				.arg(sProjects)
+				.arg(sAccounts)
 				.arg(l_Intervals.at(j-1).toString("yyyy-MM-dd"))
 				.arg(l_Intervals.at(j).toString("yyyy-MM-dd"))
 				.arg(i);
@@ -328,7 +329,6 @@ void ZProtokol::buildProtokol()
 
 	//////////////////////// начальный остаток ////////////////////////
 	double summaAll;
-	double ostatok = 0;
 	for(i=0; i<2; i++)
 	{
 		text = QString("SELECT sum(val) FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND account IN (%4) AND date < '%5'")

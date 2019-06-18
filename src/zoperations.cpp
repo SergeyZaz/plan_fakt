@@ -11,6 +11,8 @@ ZOperations::ZOperations()
 	QStringList items;
 	items << tr("Установить проект") << tr("Установить статью") << tr("Установить тип") << tr("Выгрузить в CSV");
 	setContextMenuForTbl(items);
+
+	connect(m_tbl, SIGNAL(needUpdateVal(int)), this,SIGNAL(needUpdateVal(int)));
 }
 
 void ZOperations::loadItemsToList(QStringList &l_Text, QList<int> &l_id, const QString &tableName)
@@ -148,6 +150,7 @@ int ZOperations::exportSelectedItems()
 		out << "\n";
 	}
 
+	QMessageBox::information(this, QString("Выполнено"), QString("Выбранные операции выгружены в файл!"));
 	return 1;
 }
 

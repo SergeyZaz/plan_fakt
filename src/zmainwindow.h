@@ -33,6 +33,7 @@ private slots:
 	void slotOpenProtokolDialog();
 	void slotOpenOperationsDialog();
 	void slotUpdate();
+	void slotUpdateAccountsVal(int account_id);
 
 private:
 	void readSettings();

@@ -164,7 +164,8 @@ void ZOperationsForm::applyChanges()
 		QMessageBox::critical(this, tr("Ошибка"), tr("Не заполнено обязательное поле 'Счет'"));
 		return;
 	}
-	query.addBindValue(ui.cboAccount->itemData(ui.cboAccount->currentIndex(), Qt::UserRole));
+	int m_AccountId = ui.cboAccount->itemData(ui.cboAccount->currentIndex(), Qt::UserRole).toInt();
+	query.addBindValue(m_AccountId);
 	query.addBindValue(ui.dValue->value());
 
 	if(!query.exec())
@@ -173,6 +174,8 @@ void ZOperationsForm::applyChanges()
 		return;
 	}
 	
+	emit needUpdateVal(m_AccountId);
+
 	accept();
 }
 

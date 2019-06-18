@@ -303,6 +303,7 @@ void ZMainWindow::slotOpenOperationsDialog()
 
 	ZMdiChild *child = new ZOperations;
 	connect(child, SIGNAL(needUpdate()), this,SLOT(slotUpdate()));
+	connect(child, SIGNAL(needUpdateVal(int)), this,SLOT(slotUpdateAccountsVal(int)));
 	ui.mdiArea->addSubWindow(child);
 	child->setWindowTitleAndIcon(ui.actOperations->text(), ui.actOperations->icon());
 	child->initDB(db, "operations");
@@ -313,5 +314,53 @@ void ZMainWindow::slotOpenProtokolDialog()
 {
 	ZProtokol *pD = new ZProtokol(this);
 	pD->show();
+}
+
+void ZMainWindow::slotUpdateAccountsVal(int account_id)
+{
+	QSqlQuery query, query2;
+	int id;
+	double val;
+	QString stringQuery = "SELECT id FROM accounts";
+
+	if(account_id!=-1)
+		stringQuery += QString(" WHERE id=%1").arg(account_id);
+	
+	if (query.exec(stringQuery))
+	{
+		while (query.next()) 
+		{
+			id = query.value(0).toInt();
+			val = 0;
+
+			for(int i=0;i<2;i++)
+			{
+				stringQuery = QString("SELECT sum(val) FROM operations WHERE type=%1 AND account=%2")
+					.arg(i) //Тип: 0-Поступление/1-Выплата/2-Перемещение
+					.arg(id);
+				if(query2.exec(stringQuery))
+				{
+					while (query2.next()) 
+					{
+						if(i==0)
+							val += query2.value(0).toDouble();
+						else
+							val -= query2.value(0).toDouble();
+					}
+				}
+				else
+				{
+				}
+			}
+			
+			stringQuery = QString("UPDATE accounts SET val=%1 WHERE id=%2").arg(val, 0, 'f', 2).arg(id);
+			if(!query2.exec(stringQuery))
+				QMessageBox::critical(this, tr("Ошибка"), query2.lastError().text());
+		}
+	}	
+	else
+	{
+		QMessageBox::critical(this, tr("Ошибка"), query.lastError().text());
+	}
 }
 

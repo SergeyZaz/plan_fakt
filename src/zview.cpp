@@ -270,6 +270,8 @@ void ZView::updateAndShow(bool fMaximized)
 
 void ZView::reload()
 {
+	emit needUpdateVal(-1); 
+
 	update();
 }
 
@@ -333,6 +335,7 @@ void ZView::setCustomEditor(ZEditAbstractForm *pD)
 		delete pEditForm;
 	pEditForm = pD;
 	int rc;
+	rc = connect(pEditForm, SIGNAL(needUpdateVal(int)), this, SIGNAL(needUpdateVal(int)));
 	rc = connect(pEditForm, SIGNAL(accepted()), this, SLOT(applyEditor()));
 	rc = connect(pD, SIGNAL(errorQuery(const QDateTime &, long , const QString &)), this, SIGNAL(errorQuery(const QDateTime &, long , const QString &)));
 }
@@ -697,6 +700,8 @@ QVariant ZTableModel::data(const QModelIndex & index, int role) const
 			case 1://Тип: 0-Поступление/1-Выплата/2-Перемещение
 				return MINUS_COLOR;
 			case 0:
+				if(v.toDouble() < 0)
+					return MINUS_COLOR;
 				return PLUS_COLOR;
 			default:
 				return Qt::gray;

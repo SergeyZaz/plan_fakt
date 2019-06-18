@@ -28,6 +28,7 @@ protected:
 
 signals:
 	void needUpdate();
+	void needUpdateVal(int);
 protected slots:
 	void slotCustomActionExec();
 };
