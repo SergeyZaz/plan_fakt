@@ -1,12 +1,15 @@
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QFile>
+#include <QFileDialog>
+#include <QTextStream>
 #include "zoperations.h"
 #include "zoperationsform.h"
 
 ZOperations::ZOperations()
 {
 	QStringList items;
-	items << tr("Установить проект") << tr("Установить статью") << tr("Установить тип");
+	items << tr("Установить проект") << tr("Установить статью") << tr("Установить тип") << tr("Выгрузить в CSV");
 	setContextMenuForTbl(items);
 }
 
@@ -83,6 +86,11 @@ void ZOperations::execCustomAction(const QString &txt)
 		text = QInputDialog::getItem(this, tr("Установка типа"),
 			tr("Типы:"), items, 0, false, &ok);
 	}
+	else if(txt == "Выгрузить в CSV")
+	{
+		exportSelectedItems();
+		return;
+	}
 
 	if (!ok || text.isEmpty())
 		return;
@@ -94,6 +102,53 @@ void ZOperations::execCustomAction(const QString &txt)
 
 	if(updateSelectedItems(id, strAtt))
 		reload();
+}
+
+int ZOperations::exportSelectedItems()
+{
+	QString fileName = QFileDialog::getSaveFileName(this);
+	if (fileName.isEmpty()) 
+		return 0;
+
+#ifdef SAVETOXML
+	//...
+#endif //SAVETOXML
+
+	if(!fileName.endsWith(".csv"))
+		fileName += ".csv";
+
+	QFile file(fileName);
+	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		QMessageBox::critical(NULL, QString("Ошибка"), QString("Ошибка создания файла!"));
+		return 0;
+	}
+
+	QTextStream out(&file);	 
+
+	QTableView *tbl = m_tbl->getTable();
+	QModelIndexList listIndxs = tbl->selectionModel()->selectedRows();
+
+	int row, i, columns = m_tbl->getModel()->columnCount();
+	for(i=0; i<columns; i++)
+	{
+		if(!m_tbl->getTable()->isColumnHidden(i))
+			out << m_tbl->getModel()->headerData(i, Qt::Horizontal).toString() << ";";
+	}
+	out << "\n";
+
+	foreach(QModelIndex index, listIndxs)
+	{
+		row = m_tbl->getSortModel()->mapToSource(index).row();
+		for(i=0; i<columns; i++)
+		{
+			if(!m_tbl->getTable()->isColumnHidden(i))
+				out << m_tbl->getModel()->data(m_tbl->getModel()->index(row, i)).toString() << ";";
+		}
+		out << "\n";
+	}
+
+	return 1;
 }
 
 int ZOperations::updateSelectedItems(int setId, const QString &attName)
@@ -146,13 +201,18 @@ void ZOperations::initDB(QSqlDatabase &m_DB, const QString &m_TblName)
   project integer, -- проект
   val double precision, -- Сумма
   account integer, -- Счет
+  num integer, -- Номер операции
 */
 	QList<int> hideColumns;
 	QStringList headers;
 	QList<int> cRem;
 	
 	hideColumns << 0;
-	headers <<  tr("id") << tr("Дата операции") << tr("Тип")  << tr("Комментарий") << tr("Юр.лицо") << tr("Контрагент") << tr("Статья") << tr("Проект") << tr("Сумма") << tr("Счёт");
+#ifndef _DEBUG
+	hideColumns << 10;
+#endif
+
+	headers <<  tr("id") << tr("Дата операции") << tr("Тип")  << tr("Комментарий") << tr("Юр.лицо") << tr("Контрагент") << tr("Статья") << tr("Проект") << tr("Сумма") << tr("Счёт") << tr("Номер");
 
 	m_tbl->setTable(m_TblName, headers, cRem);
 	m_tbl->setCustomEditor(new ZOperationsForm);

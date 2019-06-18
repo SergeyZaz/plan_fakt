@@ -285,16 +285,18 @@ int ZParseFile::parseData(const QString &data)
 	///////////////////////	operations	///////////////////////
 
 	double val = mapData.value("Сумма", "0").toDouble();
-
+	int number = mapData.value("Номер", "0").toInt();
 	id = 0;
-	str_query = QString("SELECT id FROM operations WHERE date='%1' AND type=%2 AND ur_person=%3 AND partner=%4 AND val=%5 AND account=%6")
-		//.arg(mapData.value("Дата"))
+
+	str_query = QString("SELECT id FROM operations WHERE date='%1' AND type=%2 AND ur_person=%3 AND partner=%4 AND val=%5 AND account=%6 AND num=%7")
 		.arg(fMinus ? mapData.value("ДатаСписано") : mapData.value("ДатаПоступило"))
 		.arg(fMinus ? 1 : 0) //(val < 0 )	//Тип: 0-Поступление/1-Выплата/2-Перемещение
 		.arg(idUrPerson)
 		.arg(idPartner)
 		.arg(val)
-		.arg(idAccount);
+		.arg(idAccount)
+		.arg(number);
+
 	rc = query.exec(str_query);
 	if(rc)
 	{
@@ -312,16 +314,17 @@ int ZParseFile::parseData(const QString &data)
 	if(id > 0)
 		return 0;
 
-	str_query = QString("INSERT INTO operations ( date,type,comment,ur_person,partner,val,section,account ) VALUES ('%1', %2, '%3', %4, %5, %6, %7, %8)")
+	str_query = QString("INSERT INTO operations ( date,type,comment,ur_person,partner,val,section,account,num ) VALUES ('%1', %2, '%3', %4, %5, %6, %7, %8, %9)")
 		//.arg(mapData.value("Дата"))
 		.arg(fMinus ? mapData.value("ДатаСписано") : mapData.value("ДатаПоступило"))
 		.arg(fMinus ? 1 : 0) //(val < 0 )	//Тип: 0-Поступление/1-Выплата/2-Перемещение
 		.arg(mapData.value("НазначениеПлатежа", " "))
 		.arg(idUrPerson)
 		.arg(idPartner)
-		.arg(val)
+		.arg(val, 0, 'f', 2)
 		.arg(fMinus ? section_minus : section_plus)
-		.arg(idAccount);
+		.arg(idAccount)
+		.arg(number);
 
 	mapData.clear();
 

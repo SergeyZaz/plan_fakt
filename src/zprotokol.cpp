@@ -325,7 +325,31 @@ void ZProtokol::buildProtokol()
 			pItemRoot->setTextAlignment(j, Qt::AlignRight);
 		}
 	}
+
+	//////////////////////// начальный остаток ////////////////////////
+	double summaAll;
+	double ostatok = 0;
+	for(i=0; i<2; i++)
+	{
+		text = QString("SELECT sum(val) FROM operations WHERE type=%1 AND ur_person IN (%2) AND project IN (%3) AND account IN (%4) AND date < '%5'")
+			.arg(i) //Тип: 0-Поступление/1-Выплата/2-Перемещение
+			.arg(sUrPersons)
+			.arg(sProjects)
+			.arg(sAccounts)
+			.arg(l_Intervals.at(0).toString("yyyy-MM-dd"));
+		if (query2.exec(text))
+		{
+			while (query2.next()) 
+			{
+				if(i==0)
+					summaAll += query2.value(0).toDouble();
+				else
+					summaAll -= query2.value(0).toDouble();
+			}
+		}
+	}
 	///////////////////////////////////////////////////////////////////
+
 
 	QTreeWidgetItem *pItemItog = new QTreeWidgetItem(ui.tree);
 	ui.tree->addTopLevelItem(pItemItog);
@@ -338,7 +362,6 @@ void ZProtokol::buildProtokol()
 	pItemDelta->setFont(0, fnt);
 	
 	int n = ui.tree->topLevelItemCount();
-	double summaAll = 0;
 	for(i=1; i<l_Intervals.size(); i++)
 	{
 		summa = 0;
@@ -505,8 +528,6 @@ int ZProtokol::saveToXLSFile(const QString &fileName)
 	//mExcel->dynamicCall( "SetVisible(bool)", TRUE ); 
     // получаем указатель на книги
     QAxObject *workbooks = mExcel->querySubObject("Workbooks");
-	if(!workbooks)
-		return 0;
     // добавляем книгу
 	workbooks->dynamicCall("Add");
     // получаем указатель на текущую книгу

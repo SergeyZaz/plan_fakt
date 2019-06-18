@@ -11,6 +11,7 @@ class ZOperations : public ZMdiChild
 	void loadItemsToList(QStringList &l_Text, QList<int> &l_id, const QString &tableName);
 	int updateSelectedItems(int setId, const QString &attName);
 	void execCustomAction(const QString &txt);
+	int exportSelectedItems();
 
 public:
     ZOperations();
