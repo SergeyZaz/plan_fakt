@@ -9,7 +9,7 @@
 ZOperations::ZOperations()
 {
 	QStringList items;
-	items << tr("Установить проект") << tr("Установить статью") << tr("Установить тип") << tr("Выгрузить в CSV");
+	items << tr("Установить проект") << tr("Установить статью") << tr("Установить тип") << tr("Выгрузить в файл");
 	setContextMenuForTbl(items);
 
 	connect(m_tbl, SIGNAL(needUpdateVal(int)), this,SIGNAL(needUpdateVal(int)));
@@ -88,7 +88,7 @@ void ZOperations::execCustomAction(const QString &txt)
 		text = QInputDialog::getItem(this, tr("Установка типа"),
 			tr("Типы:"), items, 0, false, &ok);
 	}
-	else if(txt == "Выгрузить в CSV")
+	else if(txt == "Выгрузить в файл")
 	{
 		exportSelectedItems();
 		return;
@@ -106,6 +106,28 @@ void ZOperations::execCustomAction(const QString &txt)
 		reload();
 }
 
+#ifdef SAVETOXML
+#include <QAxObject>
+void val2Cell(QAxObject* StatSheet, int row, int col, QString &s)
+{
+	if(!StatSheet)
+		return;
+	// получение указателя на ячейку [row][col] ((!)нумерация с единицы)
+	QAxObject *cell = StatSheet->querySubObject("Cells(Int,Int)", row, col);
+	// вставка значения переменной data (любой тип, приводимый к QVariant) в полученную ячейку
+	if(!cell)
+		return;
+	s = s.replace(QChar::Nbsp, "");
+	bool ok;
+	double v = s.toDouble(&ok);
+	if(ok)
+		cell->dynamicCall("SetValue(const QVariant&)", v);
+	else						
+		cell->dynamicCall("SetValue(const QVariant&)", s);
+    delete cell;
+}
+#endif //SAVETOXML
+
 int ZOperations::exportSelectedItems()
 {
 	QString fileName = QFileDialog::getSaveFileName(this);
@@ -113,12 +135,34 @@ int ZOperations::exportSelectedItems()
 		return 0;
 
 #ifdef SAVETOXML
-	//...
-#endif //SAVETOXML
-
+	if(!fileName.endsWith(".xlsx"))
+		fileName += ".xlsx";
+#else
 	if(!fileName.endsWith(".csv"))
 		fileName += ".csv";
+#endif //SAVETOXML
 
+#ifdef SAVETOXML
+	// получаем указатель на Excel
+    QAxObject *mExcel = new QAxObject("Excel.Application",this);
+	//делаем его видимым
+	//mExcel->dynamicCall( "SetVisible(bool)", TRUE ); 
+    // получаем указатель на книги
+    QAxObject *workbooks = mExcel->querySubObject("Workbooks");
+    // добавляем книгу
+	workbooks->dynamicCall("Add");
+    // получаем указатель на текущую книгу
+	QAxObject *workbook = mExcel->querySubObject("ActiveWorkBook");
+	if(!workbook)
+		return 0;
+    // получаем указатель на листы
+    QAxObject *mSheets = workbook->querySubObject( "Sheets" );
+    // указываем, какой лист выбрать
+    QAxObject *StatSheet = mSheets->querySubObject( "Item(const QVariant&)", QVariant("Лист1") );
+	if(!StatSheet)
+		return 0;
+	int r = 1;
+#else
 	QFile file(fileName);
 	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
@@ -127,6 +171,7 @@ int ZOperations::exportSelectedItems()
 	}
 
 	QTextStream out(&file);	 
+#endif //SAVETOXML
 
 	QTableView *tbl = m_tbl->getTable();
 	QModelIndexList listIndxs = tbl->selectionModel()->selectedRows();
@@ -135,9 +180,17 @@ int ZOperations::exportSelectedItems()
 	for(i=0; i<columns; i++)
 	{
 		if(!m_tbl->getTable()->isColumnHidden(i))
+#ifdef SAVETOXML
+			val2Cell(StatSheet, r, i, m_tbl->getModel()->headerData(i, Qt::Horizontal).toString());
+#else
 			out << m_tbl->getModel()->headerData(i, Qt::Horizontal).toString() << ";";
+#endif //SAVETOXML
 	}
+#ifdef SAVETOXML
+	r++;
+#else
 	out << "\n";
+#endif //SAVETOXML
 
 	foreach(QModelIndex index, listIndxs)
 	{
@@ -145,10 +198,45 @@ int ZOperations::exportSelectedItems()
 		for(i=0; i<columns; i++)
 		{
 			if(!m_tbl->getTable()->isColumnHidden(i))
-				out << m_tbl->getModel()->data(m_tbl->getModel()->index(row, i)).toString() << ";";
+			{
+				QString text = m_tbl->getModel()->data(m_tbl->getModel()->index(row, i)).toString();
+#ifdef SAVETOXML
+				val2Cell(StatSheet, r, i, text);
+#else
+				if(i==8)// Сумма
+					out << text.replace(".", ",") << ";";
+				else
+					out << text << ";";
+#endif //SAVETOXML
+			}
 		}
+#ifdef SAVETOXML
+		r++;
+#else
 		out << "\n";
+#endif //SAVETOXML
 	}
+
+#ifdef SAVETOXML
+	QString tmp_s = fileName;
+	//правим слеши, насколько необходимо не помню
+	tmp_s.replace("/","\\");
+	//говорим excel что всякие служебные сообщения выводить не надо
+	mExcel->setProperty("DisplayAlerts", 0);
+	//сохраняем наш файл под сгенерированным именем в каталог с программой
+	workbook->dynamicCall("SaveAs (const QString&)", tmp_s);
+
+	mExcel->setProperty("DisplayAlerts", 1);
+
+	//зачем-то надо, канонично сразу не закомменитировал, теперь не помн
+	workbook->dynamicCall("Close(Boolean)", false);
+
+    delete StatSheet;
+    delete mSheets;
+    delete workbook;
+    delete workbooks;
+	delete mExcel;
+#endif //SAVETOXML
 
 	QMessageBox::information(this, QString("Выполнено"), QString("Выбранные операции выгружены в файл!"));
 	return 1;

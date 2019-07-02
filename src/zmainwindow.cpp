@@ -65,12 +65,13 @@ void ZMainWindow::closeEvent(QCloseEvent *event)
 void ZMainWindow::slotAbout()
 {
 	QMessageBox::about(this, tr("О программе"),
-		tr("Программа для ведения учета денежных средств.<p>Версия 1.0.1. Автор: <a href=\"mailto:zaz@29.ru\">Zaz</a>"));
+		tr("Программа для ведения учета денежных средств.<p>Версия 2.0.1. (Сборка: %1 %2) Автор: <a href=\"mailto:zaz@29.ru\">Zaz</a>")
+		.arg( __DATE__ ).arg( __TIME__ ));
 }
 
 QString key, key_id;
 #define GET_KEY(key) QCryptographicHash::hash("Zaz" + key.toLocal8Bit(), QCryptographicHash::Md5).toHex()
-#define TRIAL_NUM_DAYS	15
+#define TRIAL_NUM_DAYS	180
 void ZMainWindow::f()
 {
 	if(key_id == GET_KEY(key))
@@ -335,7 +336,8 @@ void ZMainWindow::slotUpdateAccountsVal(int account_id)
 
 			for(int i=0;i<2;i++)
 			{
-				stringQuery = QString("SELECT sum(val) FROM operations WHERE type=%1 AND account=%2")
+				//stringQuery = QString("SELECT sum(val) FROM operations WHERE type=%1 AND account=%2")
+				stringQuery = QString("SELECT sum(val) FROM operations WHERE section IN (SELECT id FROM sections WHERE type=%1) AND account=%2")
 					.arg(i) //Тип: 0-Поступление/1-Выплата/2-Перемещение
 					.arg(id);
 				if(query2.exec(stringQuery))

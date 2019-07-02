@@ -600,7 +600,7 @@ int ZProtokol::saveToXLSFile(const QString &fileName)
 	}
 
 	QString tmp_s = fileName;
-	//правм слеши, насколько необходимо не помню
+	//правим слеши, насколько необходимо не помню
 	tmp_s.replace("/","\\");
 	//говорим excel что всякие служебные сообщения выводить не надо
 	mExcel->setProperty("DisplayAlerts", 0);
